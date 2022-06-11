@@ -14,3 +14,13 @@ a {
 * {
   box-sizing: border-box;
 }
+
+main {
+  display: block;
+  width: 720px;
+  margin: auto;
+}
+
+input {
+  margin: 5px 0;
+}
