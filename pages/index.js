@@ -17,7 +17,6 @@ const registrationSchema = Yup.object().shape({
 
 export default function Home() {
 const postFormData = async (values) => {
-    console.log(values)
    await fetch('http://localhost:3000/api/newUser', {
         method: 'POST',
        headers: {
@@ -36,9 +35,10 @@ const postFormData = async (values) => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="mx-auto">
+      <main className="w-full max-w-sm mt-10">
+
           <div>
-              <h1>Welcome to Logly</h1>
+              <h1 className="text-4xl mb-5 font-bold text-center">Welcome to Logly</h1>
               <Formik
                   initialValues={{siteId: '', name: '', email: '', password: '' }}
                   validationSchema={registrationSchema}
@@ -56,50 +56,73 @@ const postFormData = async (values) => {
                         isSubmitting,
                         /* and other goodies */
                     }) => (
-                      <form onSubmit={handleSubmit} className="space-y-2 rounded">
+                      <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+
+                          <div className="mb-4">
+                              <label className="block text-gray-700 text-sm font-bold" htmlFor="username">
+                                 Full Name
+                              </label>
                           <input type="text"
-                                 className="mb-2"
-                                 placeholder="Org/Site Name"
-                                 name="siteId"
-                                 onChange={handleChange}
-                                 onBlur={handleBlur}
-                                 value={values.siteId}/>
-                          {errors.siteId && touched.siteId && errors.siteId}
-                          <br/>
-                          <input type="text"
-                                 placeholder="Full Name"
-                                 name="name"
+                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                                 name="username"
                                  onChange={handleChange}
                                  onBlur={handleBlur}
                                  value={values.name}/>
                           {errors.name && touched.name && errors.name}
-                          <br/>
+                          </div>
+                          <div className="mb-4">
+                              <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="email">
+                                Email
+                              </label>
                           <input
+                              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
                               type="email"
                               name="email"
-                              placeholder="email"
                               onChange={handleChange}
                               onBlur={handleBlur}
                               value={values.email}
                           />
                           {errors.email && touched.email && errors.email}
-                          <br/>
+                          </div>
+                          <div className="mb-4">
+                              <label className="block text-gray-700 text-sm font-bold" htmlFor="siteId">
+                                  Organization Name
+                              </label>
+                              <input type="text"
+                                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                                     name="siteId"
+                                     onChange={handleChange}
+                                     onBlur={handleBlur}
+                                     value={values.siteId}/>
+                              {errors.siteId && touched.siteId && errors.siteId}
+                          </div>
+                          <div className="mb-4">
+                              <label className="block text-gray-700 text-sm font-bold" htmlFor="password">
+                                  Password
+                              </label>
                           <input
+                              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
                               type="password"
                               name="password"
-                              placeholder="password"
                               onChange={handleChange}
                               onBlur={handleBlur}
                               value={values.password}
                           />
-                          <br/>
+                          </div>
                           {errors.password && touched.password && errors.password}
-                          <button type="submit" disabled={isSubmitting}>
+                          <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" disabled={isSubmitting}>
                               Submit
                           </button>
+                          <a className="ml-4 inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
+                             href="#">
+                              Forgot Password?
+                          </a>
                       </form>
                   )}
               </Formik>
+              <p className="text-center text-gray-500 text-xs">
+                  &copy;2020 Logly Corp. All rights reserved.
+              </p>
           </div>
       </main>
     </div>
