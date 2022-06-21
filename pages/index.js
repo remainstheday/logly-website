@@ -1,32 +1,60 @@
-import Head from 'next/head'
-import {Formik} from "formik";
-import * as Yup from 'yup';
+import Head from "next/head";
+import { Formik } from "formik";
+import * as Yup from "yup";
+import { loadStripe } from "@stripe/stripe-js";
+import { useState, useEffect } from "react";
+import { Elements } from "@stripe/react-stripe-js";
+import { fetchPostJSON } from "../utils/api-helpers";
+import * as config from "../config";
+import ElementsForm from "../components/ElementsForm";
+
+let stripePromise;
+const getStripe = () => {
+  if (!stripePromise) {
+    stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+  }
+  return stripePromise;
+};
 
 const registrationSchema = Yup.object().shape({
-    siteId: Yup.string()
-        .min(3, 'too short!')
-        .max(50, 'too long!')
-        .required('Required'),
-    email: Yup.string()
-        .email('Invalid email')
-        .required('Required'),
-    password: Yup.string()
-        .min(8, 'too short')
-        .required('required')
-})
+  siteId: Yup.string()
+    .min(3, "too short!")
+    .max(50, "too long!")
+    .required("Required"),
+  email: Yup.string()
+    .email("Invalid email")
+    .required("Required"),
+  password: Yup.string()
+    .min(8, "too short")
+    .required("required")
+});
 
 export default function Home() {
-const postFormData = async (values) => {
-   await fetch('http://localhost:3000/api/newUser', {
-        method: 'POST',
-       headers: {
-            'Content-Type': 'application/json'
-       },
-        body: JSON.stringify(values)
-    }).then(response => response.json()).then(data => {
-        console.log(data)
-   })
-}
+  const [error, setError] = useState();
+  const [paymentIntent, setPaymentIntent] = useState(null);
+
+  const postFormData = async values => {
+    await fetch("http://localhost:3000/api/newUser", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(values)
+    })
+      .then(response => response.json())
+      .then(data => {
+        return console.log(data);
+      });
+  };
+
+  useEffect(() => {
+    fetchPostJSON("/api/payment_intents", {
+      amount: Math.round(config.MAX_AMOUNT / config.AMOUNT_STEP)
+    }).then(data => {
+      setPaymentIntent(data);
+    });
+  }, [setPaymentIntent]);
+
   return (
     <div>
       <Head>
@@ -36,95 +64,147 @@ const postFormData = async (values) => {
       </Head>
 
       <main className="w-full max-w-sm mt-10">
-
-          <div>
-              <h1 className="text-4xl mb-5 font-bold text-center">Welcome to Logly</h1>
-              <Formik
-                  initialValues={{siteId: '', name: '', email: '', password: '' }}
-                  validationSchema={registrationSchema}
-                  onSubmit={(values, { setSubmitting }) => {
-                      postFormData(values);
-                  }}
+        <div>
+          <h1 className="text-4xl mb-5 font-bold text-center">
+            Welcome to Logly
+          </h1>
+          <Formik
+            initialValues={{
+              siteId: "",
+              username: "",
+              email: "",
+              password: ""
+            }}
+            validationSchema={registrationSchema}
+            onSubmit={(values, { setSubmitting }) => {
+              postFormData(values);
+            }}
+          >
+            {({
+              values,
+              errors,
+              touched,
+              handleChange,
+              handleBlur,
+              handleSubmit,
+              isSubmitting
+              /* and other goodies */
+            }) => (
+              <form
+                onSubmit={handleSubmit}
+                className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4"
               >
-                  {({
-                        values,
-                        errors,
-                        touched,
-                        handleChange,
-                        handleBlur,
-                        handleSubmit,
-                        isSubmitting,
-                        /* and other goodies */
-                    }) => (
-                      <form onSubmit={handleSubmit} className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-
-                          <div className="mb-4">
-                              <label className="block text-gray-700 text-sm font-bold" htmlFor="username">
-                                 Full Name
-                              </label>
-                          <input type="text"
-                                 className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-                                 name="username"
-                                 onChange={handleChange}
-                                 onBlur={handleBlur}
-                                 value={values.name}/>
-                          {errors.name && touched.name && errors.name}
-                          </div>
-                          <div className="mb-4">
-                              <label className="block text-gray-700 text-sm font-bold mb-1" htmlFor="email">
-                                Email
-                              </label>
-                          <input
-                              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-                              type="email"
-                              name="email"
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                              value={values.email}
-                          />
-                          {errors.email && touched.email && errors.email}
-                          </div>
-                          <div className="mb-4">
-                              <label className="block text-gray-700 text-sm font-bold" htmlFor="siteId">
-                                  Organization Name
-                              </label>
-                              <input type="text"
-                                     className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-                                     name="siteId"
-                                     onChange={handleChange}
-                                     onBlur={handleBlur}
-                                     value={values.siteId}/>
-                              {errors.siteId && touched.siteId && errors.siteId}
-                          </div>
-                          <div className="mb-4">
-                              <label className="block text-gray-700 text-sm font-bold" htmlFor="password">
-                                  Password
-                              </label>
-                          <input
-                              className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-                              type="password"
-                              name="password"
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                              value={values.password}
-                          />
-                          </div>
-                          {errors.password && touched.password && errors.password}
-                          <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" disabled={isSubmitting}>
-                              Submit
-                          </button>
-                          <a className="ml-4 inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
-                             href="#">
-                              Forgot Password?
-                          </a>
-                      </form>
-                  )}
-              </Formik>
-              <p className="text-center text-gray-500 text-xs">
-                  &copy;2020 Logly Corp. All rights reserved.
-              </p>
+                <div className="mb-4">
+                  <label
+                    className="block text-gray-700 text-sm font-bold"
+                    htmlFor="username"
+                  >
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                    name="username"
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    value={values.username}
+                  />
+                  {errors.username && touched.username && errors.username}
+                </div>
+                <div className="mb-4">
+                  <label
+                    className="block text-gray-700 text-sm font-bold mb-1"
+                    htmlFor="email"
+                  >
+                    Email
+                  </label>
+                  <input
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                    type="email"
+                    name="email"
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    value={values.email}
+                  />
+                  {errors.email && touched.email && errors.email}
+                </div>
+                <div className="mb-4">
+                  <label
+                    className="block text-gray-700 text-sm font-bold"
+                    htmlFor="siteId"
+                  >
+                    Organization Name
+                  </label>
+                  <input
+                    type="text"
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                    name="siteId"
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    value={values.siteId}
+                  />
+                  {errors.siteId && touched.siteId && errors.siteId}
+                </div>
+                <div className="mb-4">
+                  <label
+                    className="block text-gray-700 text-sm font-bold"
+                    htmlFor="password"
+                  >
+                    Password
+                  </label>
+                  <input
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
+                    type="password"
+                    name="password"
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    value={values.password}
+                  />
+                </div>
+                {errors.password && touched.password && errors.password}
+                <button
+                  type="submit"
+                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+                  disabled={isSubmitting}
+                >
+                  Submit
+                </button>
+                <a
+                  className="ml-4 inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800"
+                  href="#"
+                >
+                  Forgot Password?
+                </a>
+                {error && <p className="text-red">{error}</p>}
+              </form>
+            )}
+          </Formik>
+          <div className="page-container">
+            {paymentIntent && paymentIntent.client_secret ? (
+              <Elements
+                stripe={getStripe()}
+                options={{
+                  appearance: {
+                    variables: {
+                      colorIcon: "#6772e5",
+                      fontFamily: "Roboto, Open Sans, Segoe UI, sans-serif"
+                    }
+                  },
+                  clientSecret: paymentIntent.client_secret
+                }}
+              >
+                <ElementsForm paymentIntent={paymentIntent} />
+              </Elements>
+            ) : (
+              <p>Loading...</p>
+            )}
           </div>
+
+          <p className="text-center text-gray-500 text-xs">
+            &copy;2020 Logly Corp. All rights reserved.
+          </p>
+        </div>
       </main>
     </div>
-  )
+  );
 }
